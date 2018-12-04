@@ -3,7 +3,7 @@
 (in-package #:advent-of-code-2018)
 
 (defun day4-parse-time (time)
-  ;; ex. "[1518-05-25 00:11] some more text here"
+  ;; example input "[1518-05-25 00:11] some more text here"
   ;;ignore the year
   (ppcre:register-groups-bind ((#'parse-integer nil month day hour min))
       ("\\[(\\d+)-(\\d+)-(\\d+) (\\d+):(\\d+)\\]" time)
@@ -11,11 +11,9 @@
 
 (defun day4-time< (log1 log2)
   (loop :for entry :in '(:month :day :hour :min)
-        :when (< (getf log1 entry 0)
-                 (getf log2 entry 0))
+        :when (< (getf log1 entry 0) (getf log2 entry 0))
         :return t
-        :when (> (getf log1 entry 0)
-                 (getf log2 entry 0))
+        :when (> (getf log1 entry 0) (getf log2 entry 0))
         :return nil))
 
 (defun day4-parse-event (event)
@@ -53,9 +51,9 @@
 
 (defun day4-prep-logdata ()
   (day4-organise-log
-   (loop-line-by-line (puzzlepath "input4.txt")
-     :collect (day4-parse-line line) into log
-     :finally (return (sort log #'day4-time<)))))
+   (sort
+    (mapcar #'day4-parse-line (read-puzzlefile "input4.txt"))
+    #'day4-time<)))
 
 (defun day4 ()
   (let* ((asleep-counters (day4-asleep-counters (day4-prep-logdata)))
@@ -63,8 +61,8 @@
          (most-asleep-minute (max-index (gethash most-asleep-id asleep-counters)))
          (most-freq-asleep-id (max-key asleep-counters :accessor (lambda (c) (reduce #'max c))))
          (most-freq-asleep-minute (max-index (gethash most-freq-asleep-id asleep-counters))))
-    (format t "The most asleep guard is #~a and it's most asleep during minute ~a -> Answer: ~a~%"
+    (format t "The most asleep guard is #~a and it's most asleep during minute ~a. -> Answer: ~a~%"
             most-asleep-id most-asleep-minute (* most-asleep-id most-asleep-minute))
-    (format t "The most frequently asleep guard is #~a and it's most asleep during minute ~a -> Answer: ~a~%"
+    (format t "The most frequently asleep guard is #~a and it's most asleep during minute ~a. -> Answer: ~a~%"
             most-freq-asleep-id most-freq-asleep-minute (* most-freq-asleep-id most-freq-asleep-minute))))
 

@@ -2,10 +2,14 @@
 
 (asdf:defsystem #:advent-of-code-2018
   :description "Solutions for the Advent of Code 2018"
-  :author "Adrian Braemer"
+  :author "NobodysHero"
   :license  "Specify license here"
   :version "0.0.1"
   :serial t
   :depends-on ("cl-ppcre")
   :components ((:file "package")
-               (:file "advent-of-code-2018")))
+               (:file "utilities")
+               (:file "day1")
+               (:file "day2")
+               (:file "day3")
+               (:file "day4")))

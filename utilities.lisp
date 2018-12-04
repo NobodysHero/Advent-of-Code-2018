@@ -1,6 +1,7 @@
 ;;;; advent-of-code-2018.lisp
 
 (in-package #:advent-of-code-2018)
+
 (defconstant +path+ "D:/Daten/lisp/advent-of-code-2018/inputs/")
 
 (defun puzzlepath (file)

@@ -2,7 +2,6 @@
 
 (in-package #:advent-of-code-2018)
 
-
 (defun count-chars (string)
   (loop
     :with counts := nil
