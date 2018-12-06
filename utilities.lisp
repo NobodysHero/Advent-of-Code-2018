@@ -32,9 +32,7 @@
   (loop :for key :being :the :hash-keys :of hashtable
         :collect key))
 
-(defun id (x) x)
-
-(defun max-key (hashtable &key (test #'>) (accessor #'id))
+(defun max-key (hashtable &key (test #'>) (accessor #'identity))
   (let ((keys (hash-keys hashtable)))
     (loop
       :with max-key := (first keys)
