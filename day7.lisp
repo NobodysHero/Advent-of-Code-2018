@@ -2,10 +2,10 @@
 
 (in-package :advent-of-code-2018)
 
-(defun day9-parse-line (line)
+(defun day7-parse-line (line)
   (list (char line 5) (char line 36)))
 
-(defun day9-build ()
+(defun day7-build ()
   (let ((counts (make-hash-table :test 'equal))
         (links (make-hash-table :test 'equal)))
     (loop-line-by-line (puzzlepath "input7.txt")
@@ -15,7 +15,7 @@
       :do (setf (gethash before counts) (gethash before counts 0))
       :finally (return (list counts links)))))
 
-(defun day9-next (counts)
+(defun day7-next (counts)
   (loop
     :with next-key := nil
     :for key :being :the :hash-keys :of counts
@@ -25,15 +25,15 @@
     :do (setf next-key key)
     :finally (return next-key)))
 
-(defun day9-task-time (letter)
+(defun day7-task-time (letter)
   (- (char-code (char-upcase letter)) 4)); #\A -> 65 - 4 -> 61
 
-(defun day9-shortest-worker (w1 w2)
+(defun day7-shortest-worker (w1 w2)
   (if (< (first w1) (first w2))
       w1
       w2))
 
-(defun day9-solve (&optional (worker-count 5))
+(defun day7-solve (&optional (worker-count 5))
   (destructuring-bind (counts links) (day9-build)
     (loop
       :with seq := nil
@@ -54,7 +54,7 @@
       :and :do (remhash next counts)
       :finally (return (list (coerce (nreverse seq) 'string) time)))))
 
-(defun day9 ()
+(defun day7 ()
   (destructuring-bind (seq time) (day9-solve 1)
     (format t "With 1 worker the tasks are completed in this order: ~a and take ~a seconds.~%"
             seq time))
