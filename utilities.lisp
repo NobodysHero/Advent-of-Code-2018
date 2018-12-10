@@ -53,3 +53,8 @@
     :for value := (aref vector index)
     :when (> value max-val) :do (setf max-ind index max-val value)
     :finally (return (values max-ind max-val))))
+
+(defun build-set (seq &key (test 'eql) (key #'identity))
+  (let ((set (make-hash-table :test test)))
+    (map nil (lambda (k) (setf (gethash (funcall key k) set) t)) seq)
+    set))
