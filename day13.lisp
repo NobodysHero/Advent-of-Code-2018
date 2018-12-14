@@ -62,21 +62,41 @@
         (#\+ (day13-turn cart)))
       cart)))
 
-(defun day13-check-collision! (cart carts)
+(defun day13-check-collision! (cart minecarts)
   (let ((collisions
           (remove-if #'minecart-crashed
-                     (remove (minecart-pos cart) carts :key #'minecart-pos :test (complement #'=)))))
-    (unless (<= 1 (length collisions))
-      (format t "Collisions: ~%~{~S~%~}~%" collisions)
+                     (remove (minecart-pos cart) minecarts :key #'minecart-pos :test (complement #'=)))))
+    (unless (= 1 (length collisions))
       (mapc (lambda (c) (setf (minecart-crashed c) t)) collisions))))
 
 (defun day13-step! (board minecarts)
   (loop
-    :for minecart :in (sort minecarts #'< :key #'minecart-pos)
+    :for minecart :in (sort (copy-list minecarts) #'< :key #'minecart-pos)
     :unless (minecart-crashed minecart)
     :do (day13-move-cart! board minecart)
-    :and :do (day13-check-collision! minecart (remove-if #'minecart-crashed minecarts))))
+    :and :do (day13-check-collision! minecart minecarts)))
 
+(defun day13-pos->coord (board pos)
+  (multiple-value-bind (y x) (floor pos (array-dimension board 1))
+    (list x y)))
+
+(defun day13 ()
+  (destructuring-bind (board carts) (day13-parse-input)
+    (loop
+      :until (some #'minecart-crashed carts)
+      :do (day13-step! board carts)
+      :finally
+      (format t "The first crash occurs at (~{~a~^,~}).~%"
+              (day13-pos->coord board (minecart-pos (find-if #'minecart-crashed carts)))))
+    (loop
+      :for uncrashed := (remove-if #'minecart-crashed carts)
+      :until (= 1 (length uncrashed))
+      :do (day13-step! board uncrashed)
+      :finally
+      (format t "After the last crash the last minecart is at (~{~a~^,~}).~%"
+                (day13-pos->coord board (minecart-pos (first uncrashed)))))))
+
+;;helper - bit ugly
 (defun day13-print-state (board minecarts)
   (let* ((width (array-dimension board 1))
          (copy (make-array (array-dimensions board)
@@ -89,46 +109,3 @@
                   (loop :for y :below (array-dimension board 0)
                         :collect (coerce (make-array width :displaced-to copy :displaced-index-offset (* y width))
                                          'string))))))
-
-(defun day13-pos->coord (board pos)
-  (multiple-value-bind (y x) (floor pos (array-dimension board 1))
-    (list x y)))
-
-(defun day13 ()
-  (destructuring-bind (board carts) (day13-parse-input)
-    (format t "The first crash occurs at (~{~a~^,~}).~%"
-            (loop
-              :until (some #'minecart-crashed carts)
-              :do (day13-step! board carts)
-              :finally (return (day13-pos->coord
-                                board
-                                (minecart-pos (find-if #'minecart-crashed carts))))))
-    (loop
-      :for uncrashed := (remove-if #'minecart-crashed carts)
-      :until (= 1 (length uncrashed))
-      :do (day13-step! board uncrashed)
-      :finally
-      (progn
-        (format t "After the last crash the last minecart is at (~{~a~^,~}).~%"
-                (day13-pos->coord board (minecart-pos (first uncrashed))))
-        (format t "~S~%~%" (first uncrashed))))
-    carts))
-
-(defparameter test-inp
-  (split-seq
-   "/->-\\        
-|   |  /----\\
-| /-+--+-\\  |
-| | |  | v  |
-\\-+-/  \\-+--/
-  \\------/   " #\Newline))
-
-(defparameter test-inp2
-  (split-seq
-   "/>-<\\  
-|   |  
-| /<+-\\
-| | | v
-\\>+</ |
-  |   ^
-  \\<->/" #\Newline))
