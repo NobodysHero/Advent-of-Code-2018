@@ -58,3 +58,11 @@
   (let ((set (make-hash-table :test test)))
     (map nil (lambda (k) (setf (gethash (funcall key k) set) t)) seq)
     set))
+
+(defun extract-integers (str)
+  (nreverse
+   (let ((list nil))
+     (ppcre:do-register-groups ((#'parse-integer int))
+         ("(-?\\d+)" str)
+       (push int list))
+     list)))
