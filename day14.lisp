@@ -16,7 +16,7 @@
               :for (rest digit) := (multiple-value-list (floor number 10))
               :then (multiple-value-list (floor rest 10))
               :collect digit
-              :while (> rest 0)))))
+              :while (> rest 0))))
 
 (defun day14 (&optional (input 327901))
   (loop :with recipes := (day14-prepare-recipes input)
