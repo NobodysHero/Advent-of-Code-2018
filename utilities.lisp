@@ -4,6 +4,41 @@
 
 (defconstant +path+ "D:/Daten/lisp/advent-of-code-2018/inputs/")
 
+(defun download-puzzle-input (day file)
+  (ql:quickload :drakma)
+  (let ((session-file (puzzlepath "session.txt"))
+        (cookie-jar (make-instance 'drakma:cookie-jar)))
+    (unless (probe-file session-file)
+      (update-session))
+    (push (make-instance 'drakma:cookie
+                         :name "session" :domain "adventofcode.com"
+                         :value 
+                         (with-open-file (session-in session-file)
+                           (read-line session-in)))
+          (drakma:cookie-jar-cookies cookie-jar))
+    (destructuring-bind (body code . stuff)
+        (multiple-value-list
+         (drakma:http-request (format nil "https://adventofcode.com/2018/day/~d/input" day) :cookie-jar jar))
+      (unless (= code 200)
+        (format t "Somnething went wrong! Return status code: ~a (~a)~%" code (first (last stuff)))
+        (return-from download-puzzle-input))
+      (with-open-file (out file :direction :output :if-does-not-exist :create :if-exists :overwrite)
+        (format out "~a" body))
+      (format t "Successfully downloaded input and wrote to: ~a~%" file))))
+
+(defun update-session ()
+  (let ((session-file (puzzlepath "session.txt")))
+    (format t "Session id for the cookie please:~%")
+    (with-open-file (session-out session-file :direction :output
+                                              :if-does-not-exist :create
+                                              :if-exists :overwrite)
+      (format session-out (read-line)))))
+
+(defun puzzlefile (day)
+  (let ((file (puzzlepath (format nil "input~2,'0d.txt" day))))
+    (or (and (probe-file file) file)
+        (download-puzzle-input day file))))
+
 (defun puzzlepath (file)
   (concatenate 'string +path+ file))
 
