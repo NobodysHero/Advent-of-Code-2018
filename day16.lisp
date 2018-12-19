@@ -2,20 +2,28 @@
 
 (in-package :advent-of-code-2018)
 
+(defun day16-make-test-case (line1 line2 line3)
+  (let ((before (extract-integers line1))
+        (instruction (extract-integers line2))
+        (after (extract-integers line3)))
+    (list (make-array (length before) :initial-contents before)
+          instruction
+          (make-array (length after) :initial-contents after))))
+
 (defun day16-parse-input ()
   (with-open-file (in (puzzlepath "input16.txt"))
     (loop :for line := (read-line in nil)
           :while line
           :unless (= 0 (length line))
           :when (char= #\B (char line 0))
-          :collect (mapcar #'extract-integers (list line (read-line in) (read-line in))) :into test-cases
+          :collect (day16-make-test-case line (read-line in) (read-line in)) :into test-cases
           :else :collect (extract-integers line) :into test-prog
           :finally (return (list test-cases test-prog)))))
 
 (defun day16-execute! (register command)
   (destructuring-bind (cmd inp1 inp2 out) command
     (macrolet ((reg (x)
-                 `(nth ,x register)))
+                 `(aref register ,x)))
       (setf (reg out)
             (case cmd
               (addr (+ (reg inp1) (reg inp2)))
@@ -65,7 +73,8 @@
           :count (<= 3 (length (day16-test-case case))) :into count
           :finally (format t "There are ~a test cases with 3 or more possible instructions.~%" count))
     (loop :with id->opcode := (day16-construct-opcode-ids cases)
-          :with registers := (list 0 0 0 0)
+          :with registers := #(0 0 0 0)
           :for (id . args) :in prog
           :do (setf registers (day16-execute! registers (cons (aref id->opcode id) args)))
-          :finally (format t "After executing the test program the value in register 0 is ~a.~%" (first registers)))))
+          :finally (format t "After executing the test program the value in register 0 is ~a.~%"
+                           (aref registers 0)))))
