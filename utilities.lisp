@@ -5,7 +5,6 @@
 (defconstant +path+ "D:/Daten/lisp/advent-of-code-2018/inputs/")
 
 (defun download-puzzle-input (day file)
-  (ql:quickload :drakma)
   (let ((session-file (puzzlepath "session.txt"))
         (cookie-jar (make-instance 'drakma:cookie-jar)))
     (unless (probe-file session-file)
@@ -18,7 +17,8 @@
           (drakma:cookie-jar-cookies cookie-jar))
     (destructuring-bind (body code . stuff)
         (multiple-value-list
-         (drakma:http-request (format nil "https://adventofcode.com/2018/day/~d/input" day) :cookie-jar jar))
+         (drakma:http-request (format nil "https://adventofcode.com/2018/day/~d/input" day)
+                              :cookie-jar cookie-jar))
       (unless (= code 200)
         (format t "Somnething went wrong! Return status code: ~a (~a)~%" code (first (last stuff)))
         (return-from download-puzzle-input))
