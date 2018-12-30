@@ -6,7 +6,7 @@
   :license  "Specify license here"
   :version "0.0.1"
   :serial t
-  :depends-on ("cl-ppcre" "drakma")
+  :depends-on ("cl-ppcre" "drakma" "cl-heap")
   :components ((:file "package")
                (:file "utilities")
                (:file "day1")
@@ -28,4 +28,6 @@
                (:file "day18")
                (:file "day19")
                (:file "day23")
-               (:file "day25")))
+               (:file "day25")
+               (:file "day20")))
+
