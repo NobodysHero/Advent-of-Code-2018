@@ -1,3 +1,4 @@
+
 ;;;; day19.lisp
 
 (in-package :advent-of-code-2018)
