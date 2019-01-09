@@ -101,3 +101,27 @@
          ("(-?\\d+)" str)
        (push int list))
      list)))
+
+(defun dijkstra (start end distance-function neighbour-function &key (test 'eql))
+  "Finds the shortest path from the start node to the end node. The neighbour-function should return a proper list of nodes adjacent to the given node. The distance-function should return a non-negative distance between the given node."
+  (loop :with open := (make-instance 'cl-heap:fibonacci-heap :key #'first)
+        :with closed := (make-hash-table :test test)
+        :initially (dolist (n (funcall neighbour-function start))
+                     (cl-heap:add-to-heap open
+                                          (list (funcall distance-function start n) n start)))
+                   (setf (gethash start closed) (cons 0 nil))
+        :while (> (cl-heap:heap-size open) 0)
+        :until (gethash end closed nil)
+        :for (distance node prior) := (cl-heap:pop-heap open)
+        ;; explore the node if not explored yet
+        :unless (gethash node closed nil) :do
+        (setf (gethash node closed) (cons distance prior))
+        (dolist (neighbour (funcall neighbour-function node))
+          (unless (gethash neighbour closed nil)
+            (cl-heap:add-to-heap open (list (+ distance (funcall distance-function node neighbour))
+                                            neighbour node))))
+        ;; reconstruct the path
+        :finally (loop :with path := nil
+                       :for at := end :then (rest (gethash at closed)) :while at
+                       :do (push at path)
+                       :finally (return-from dijkstra (values path (first (gethash end closed)))))))
