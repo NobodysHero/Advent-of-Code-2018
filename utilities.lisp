@@ -37,7 +37,8 @@
 (defun puzzlefile (day)
   (let ((file (puzzlepath (format nil "input~2,'0d.txt" day))))
     (or (and (probe-file file) file)
-        (download-puzzle-input day file))))
+        (download-puzzle-input day file)
+        file)))
 
 (defun puzzlepath (file)
   (concatenate 'string +path+ file))
