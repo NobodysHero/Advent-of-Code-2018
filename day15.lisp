@@ -17,6 +17,11 @@
   (and (day15-alive-p target)
        (not (eq (first attacker) (first target)))))
 
+(defun day15-target-selector (attacker)
+  (lambda (target)
+    (and (day15-alive-p target)
+         (not (eq (first attacker) (first target))))))
+
 (defun day15-parse-input (&optional (file "input15.txt"))
   (let* ((raw (read-puzzlefile file))
          (output (make-array (list (length (first raw)) (length raw)))))
@@ -38,16 +43,6 @@
       (or (< y1 y2)
           (and (= y1 y2) (< x1 x2))))))
 
-(defun day15-break-tie (&rest coordinates)
-  (loop
-    :with (best-x best-y) := (first coordinates)
-    :for (other-x other-y) :in (rest coordinates)
-    :when (or (< other-y best-y)
-              (and (= other-y best-y)
-                   (< other-x best-x)))
-    :do (setf best-x other-x best-y other-y)
-    :finally (return (list best-x best-y))))
-
 (defun day15-neighbours (coord)
   (destructuring-bind (x y) coord
     (list
@@ -58,12 +53,12 @@
 (defmacro day15-aref-list (array list)
   `(row-major-aref ,array (apply #'array-row-major-index ,array ,list)))
 
-(defmacro day15-map-board ((position value board) &body body)
-  (let ((index (gensym "INDEX-")))
-    `(loop :for ,index :below (array-total-size board)
-           :for ,position := (multiple-value-list (floor ,index (array-dimension ,board 1)))
-           :for ,value := (row-major-aref ,board ,index)
-           ,@body)))
+(defun day15-list-pos+unit (board)
+  (loop :for index :below (array-total-size board)
+        :for obj := (row-major-aref board index)
+        :when (day15-unit-p obj)
+        :collect (list (multiple-value-list (floor index (array-dimension board 1)))
+                       obj)))
 
 (defun day15-flood (board start)
   (let ((filled (make-array (array-dimensions board) :initial-element nil)))
@@ -79,25 +74,10 @@
                             (push n next-todo)))))
     filled))
 
-(defun day15-dump-board (board &optional (min-width 1))
-  (format t "~%")
-  (loop :with fmt := (format nil "~~~aa" min-width)
-        :for y :below (array-dimension board 1)
-        :do (loop :for x :below (array-dimension board 0)
-                  :for obj := (aref board x y)
-                  :do (format t fmt (cond
-                                      ((eq obj 'W) #\#)
-                                      ((null obj) " ")
-                                      ((listp obj) (first obj))
-                                      (t obj))))
-        (format t "~%"))
-  (format t "~%"))
-
 (defun day15-turn! (board unit position attack-power)
-  (let ((targets (day15-map-board (at obj board)
-                   :when (and (day15-unit-p obj)
-                              (day15-target-p unit obj))
-                   :collect at))
+  (let ((targets (mapcar #'first
+                         (remove nil (day15-list-pos+unit board)
+                                 :key (day15-target-selector unit))))
         (distances (day15-flood board position)))
     (when targets
       (let ((target-field 
@@ -136,8 +116,7 @@
       t)))
 
 (defun day15-round! (board &optional (elf-power 3))
-  (let ((units (sort (day15-map-board (at obj board)
-                       :when (day15-unit-p obj) :collect (list at obj))
+  (let ((units (sort (day15-list-pos+unit board)
                      #'day15-lexicographic-p :key #'first)))
     (loop :for (pos unit) :in units
           :when (day15-alive-p unit)
@@ -159,22 +138,15 @@
           :while (day15-round! board)
           :count t :into rounds
           :finally
-          (let* (team
-                 (total-hp (day15-map-board (pos obj board)
-                            :when (and (day15-unit-p obj)
-                                       (day15-alive-p obj))
-                            :sum (second obj)
-                            :and :do (setf team (first obj)))))
-            (format t "Initially the ~a win!~%" (if (eq team 'G) "goblins" "elves"))
+          (let* ((survivors (mapcar #'second (day15-list-pos+unit board)))
+                 (total-hp (reduce #'+ survivors :key #'second)))
+            (format t "Initially the ~a win!~%" (if (eq (first (first survivors)) 'G) "goblins" "elves"))
             (format t "Rounds: ~a~%" rounds)
             (format t "Total HP: ~a~%" total-hp)
             (format t "Score: ~a~%~%" (* rounds total-hp))))
     (loop :for elf-power := 4 :then (1+ elf-power)
           :until (loop :with board := (day15-copy-board initial-board)
-                       :with elves := (day15-map-board (pos val board)
-                                        :when (and (day15-unit-p val)
-                                                   (not (day15-goblin-p val)))
-                                        :collect val)
+                       :with elves := (remove-if #'day15-goblin-p (mapcar #'second (day15-list-pos+unit)))
                        :while (every #'day15-alive-p elves)
                        :while (day15-round! board elf-power)
                        :count t :into rounds
@@ -183,7 +155,21 @@
                                   (format t "The outcome then is ~a.~%" (* rounds (reduce #'+ elves :key #'second)))
                                   (return t))))))
 
+;;; testing stuff below
 
+(defun day15-dump-board (board &optional (min-width 1))
+  (format t "~%")
+  (loop :with fmt := (format nil "~~~aa" min-width)
+        :for y :below (array-dimension board 1)
+        :do (loop :for x :below (array-dimension board 0)
+                  :for obj := (aref board x y)
+                  :do (format t fmt (cond
+                                      ((eq obj 'W) #\#)
+                                      ((null obj) " ")
+                                      ((listp obj) (first obj))
+                                      (t obj))))
+            (format t "~%"))
+  (format t "~%"))
 
 (defun day15-clean-test (&optional (file "input15test.txt"))
   (let ((inp (read-puzzlefile file)))
