@@ -38,7 +38,7 @@
   board)
 
 (defun day17-initialize-board (input)
-  (destructuring-bind (raw-min-x max-x min-y max-y) (day17-bbox inp)
+  (destructuring-bind (raw-min-x max-x min-y max-y) (day17-bbox input)
     (let* ((width  (+ 3 (- max-x raw-min-x)));pad-x
            (height (+ 1 (- max-y min-y)))
            (min-x (1- raw-min-x))

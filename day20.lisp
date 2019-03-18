@@ -68,13 +68,13 @@
 
 (defun day20 ()
   (let ((edges (day20-build-graph (day20-parse-file))))
-    (loop :with open := (make-instance 'fibonacci-heap :key #'car)
+    (loop :with open := (make-instance 'cl-heap:fibonacci-heap :key #'car)
           :with closed := (make-hash-table)
-          :for (depth . node) := (cons 0 #C(0 0)) :then (pop-heap open)
+          :for (depth . node) := (cons 0 #C(0 0)) :then (cl-heap:pop-heap open)
           :count (>= depth 1000) :into far-away
           :do (setf (gethash node closed) t)
           :do (dolist (new (gethash node edges))
                 (unless (gethash new closed nil)
-                  (add-to-heap open (cons (1+ depth) new))))
-          :while (> (heap-size open) 0)
+                  (cl-heap:add-to-heap open (cons (1+ depth) new))))
+          :while (> (cl-heap:heap-size open) 0)
           :finally (format t "The furthest room is ~a doors away and there a total of ~a rooms 1000 doors or more away.~%" depth far-away))))

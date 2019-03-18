@@ -75,9 +75,10 @@
     filled))
 
 (defun day15-turn! (board unit position attack-power)
-  (let ((targets (mapcar #'first
-                         (remove nil (day15-list-pos+unit board)
-                                 :key (day15-target-selector unit))))
+  (let* ((target-selector (day15-target-selector unit))
+	 (targets (mapcar #'first
+                          (remove nil (day15-list-pos+unit board)
+                                  :key (lambda (pos+unit) (funcall target-selector (second pos+unit))))))
         (distances (day15-flood board position)))
     (when targets
       (let ((target-field 
@@ -146,7 +147,7 @@
             (format t "Score: ~a~%~%" (* rounds total-hp))))
     (loop :for elf-power := 4 :then (1+ elf-power)
           :until (loop :with board := (day15-copy-board initial-board)
-                       :with elves := (remove-if #'day15-goblin-p (mapcar #'second (day15-list-pos+unit)))
+                       :with elves := (remove-if #'day15-goblin-p (mapcar #'second (day15-list-pos+unit board)))
                        :while (every #'day15-alive-p elves)
                        :while (day15-round! board elf-power)
                        :count t :into rounds
